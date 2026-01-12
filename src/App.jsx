@@ -15,15 +15,12 @@ function App() {
   const [showProfile, setShowProfile] = useState(false);
   const [xProfile, setXProfile] = useState(null); // { name, handle, photo }
 
-  const handleXConnect = () => {
-    // Simulate OAuth flow
-    setTimeout(() => {
-      setXProfile({
-        name: 'Demo User',
-        handle: '@demo_user_jp',
-        photo: 'https://ui-avatars.com/api/?name=Demo+User&background=0D8ABC&color=fff' // Placeholder
-      });
-    }, 1000);
+  const handleXConnect = (profile) => {
+    if (!profile) {
+      setXProfile(null);
+      return;
+    }
+    setXProfile(profile);
   };
 
   const [scanResult, setScanResult] = useState(null);
@@ -178,77 +175,119 @@ function App() {
   );
 }
 
-const ProfileModal = ({ onClose, account, isDemo, connectWallet, xProfile, onConnectX }) => (
-  <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-    <motion.div
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-      onClick={onClose}
-    />
-    <motion.div
-      initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-      className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl relative z-10 overflow-hidden"
-    >
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-xl font-bold text-slate-800">アカウント設定</h3>
-        <button onClick={onClose} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200"><X size={20} /></button>
-      </div>
+const ProfileModal = ({ onClose, account, isDemo, connectWallet, xProfile, onConnectX }) => {
+  // Local state for X input
+  const [inputHandle, setInputHandle] = useState('');
+  const [loading, setLoading] = useState(false);
 
-      <div className="space-y-4">
-        {/* Wallet Section */}
-        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-          <p className="text-xs font-bold text-slate-400 mb-2 uppercase">ウォレット接続</p>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-full ${isDemo ? 'bg-slate-200' : 'bg-emerald-100 text-emerald-600'}`}>
-                <Wallet size={20} />
-              </div>
-              <div>
-                <p className="font-bold text-sm text-slate-800">{isDemo ? '未接続' : 'Connected'}</p>
-                <p className="text-xs text-slate-500 font-mono">{account ? account.slice(0, 12) + '...' : '0x...'}</p>
-              </div>
-            </div>
-            {isDemo && (
-              <button onClick={connectWallet} className="px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg shadow-sm hover:bg-blue-700">
-                接続
-              </button>
-            )}
-          </div>
+  const handleXSubmit = () => {
+    if (!inputHandle) return;
+    setLoading(true);
+    // Clean handle
+    const handle = inputHandle.replace('@', '').trim();
+    // Use unavatar.io for "real" fetch simulation without backend
+    const photoUrl = `https://unavatar.io/twitter/${handle}`;
+
+    // Simulate a check (loading)
+    setTimeout(() => {
+      onConnectX({
+        name: `@${handle}`,
+        handle: `@${handle}`,
+        photo: photoUrl
+      });
+      setLoading(false);
+    }, 1500);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+        className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl relative z-10 overflow-hidden"
+      >
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-bold text-slate-800">アカウント設定</h3>
+          <button onClick={onClose} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200"><X size={20} /></button>
         </div>
 
-        {/* X Section */}
-        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-          <p className="text-xs font-bold text-slate-400 mb-2 uppercase">ソーシャル連携</p>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-full ${xProfile ? 'bg-black text-white' : 'bg-slate-200'}`}>
-                {/* Simple X icon SVG */}
-                <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
-                </svg>
+        <div className="space-y-4">
+          {/* Wallet Section */}
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+            <p className="text-xs font-bold text-slate-400 mb-2 uppercase">ウォレット接続</p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-full ${isDemo ? 'bg-slate-200' : 'bg-emerald-100 text-emerald-600'}`}>
+                  <Wallet size={20} />
+                </div>
+                <div>
+                  <p className="font-bold text-sm text-slate-800">{isDemo ? '未接続' : 'Connected'}</p>
+                  <p className="text-xs text-slate-500 font-mono">{account ? account.slice(0, 12) + '...' : '0x...'}</p>
+                </div>
               </div>
-              <div>
-                <p className="font-bold text-sm text-slate-800">{xProfile ? xProfile.name : 'X (Twitter)'}</p>
-                <p className="text-xs text-slate-500">{xProfile ? xProfile.handle : '未連携'}</p>
-              </div>
+              {isDemo && (
+                <button onClick={connectWallet} className="px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg shadow-sm hover:bg-blue-700">
+                  接続
+                </button>
+              )}
             </div>
+          </div>
+
+          {/* X Section */}
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+            <p className="text-xs font-bold text-slate-400 mb-2 uppercase">X (Twitter) 連携</p>
+
             {!xProfile ? (
-              <button onClick={onConnectX} className="px-3 py-1.5 bg-black text-white text-xs font-bold rounded-lg shadow-sm hover:bg-zinc-800">
-                連携
-              </button>
+              <div className="space-y-3">
+                <p className="text-xs text-slate-500">IDを入力して連携してください</p>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-3 text-slate-400">@</span>
+                    <input
+                      type="text"
+                      placeholder="username"
+                      className="w-full bg-white border border-slate-300 rounded-xl pl-8 pr-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                      value={inputHandle}
+                      onChange={(e) => setInputHandle(e.target.value)}
+                    />
+                  </div>
+                  <button
+                    onClick={handleXSubmit}
+                    disabled={loading || !inputHandle}
+                    className="bg-black text-white px-4 rounded-xl font-bold text-xs disabled:opacity-50"
+                  >
+                    {loading ? '...' : '連携'}
+                  </button>
+                </div>
+              </div>
             ) : (
-              <button className="text-xs font-bold text-slate-400">連携済み</button>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-0.5 rounded-full border border-slate-200">
+                    <img src={xProfile.photo} className="w-10 h-10 rounded-full" alt="X Avatar" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm text-slate-800">{xProfile.handle}</p>
+                    <p className="text-xs text-green-600 font-bold">連携済み</p>
+                  </div>
+                </div>
+                <button onClick={() => onConnectX(null)} className="text-xs text-red-500 font-bold hover:underline">解除</button>
+              </div>
             )}
           </div>
         </div>
-      </div>
 
-      <div className="mt-8 text-center text-xs text-slate-300">
-        v1.0.1
-      </div>
-    </motion.div>
-  </div>
-);
+        <div className="mt-8 text-center text-xs text-slate-300">
+          v1.0.2
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
 // Sub-components
 
@@ -303,26 +342,40 @@ const SendView = ({ onBack }) => {
   const [step, setStep] = useState('input'); // input, scan, confirm
   const [address, setAddress] = useState('');
   const [amount, setAmount] = useState('');
+  const [cameraError, setCameraError] = useState(null);
 
   useEffect(() => {
+    let scanner = null;
     if (step === 'scan') {
-      const scanner = new Html5QrcodeScanner(
-        "reader",
-        { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 },
-        false
-      );
+      // Small delay to ensure render
+      setTimeout(() => {
+        try {
+          scanner = new Html5QrcodeScanner(
+            "reader",
+            { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 },
+            false
+          );
 
-      scanner.render((decodedText) => {
-        let cleanAddress = decodedText;
-        if (cleanAddress.includes('ethereum:')) cleanAddress = cleanAddress.split('ethereum:')[1].split('?')[0];
-        setAddress(cleanAddress);
-        setStep('input');
-      }, (err) => {
-        // ignore
-      });
+          scanner.render((decodedText) => {
+            let cleanAddress = decodedText;
+            if (cleanAddress.includes('ethereum:')) cleanAddress = cleanAddress.split('ethereum:')[1].split('?')[0];
+            setAddress(cleanAddress);
+            setStep('input');
+            scanner.clear();
+          }, (err) => {
+            // Scanning...
+            setCameraError(null);
+          });
+        } catch (e) {
+          console.error("Camera start failed", e);
+          setCameraError("カメラの起動に失敗しました。権限を確認してください。");
+        }
+      }, 100);
 
       return () => {
-        scanner.clear().catch(e => console.log('Scanner cleanup', e));
+        if (scanner) {
+          try { scanner.clear(); } catch (e) { }
+        }
       };
     }
   }, [step]);
@@ -333,7 +386,8 @@ const SendView = ({ onBack }) => {
 
       {step === 'scan' ? (
         <div className="flex flex-col items-center justify-center min-h-[400px]">
-          <div id="reader" className="w-full max-w-sm rounded-2xl overflow-hidden shadow-xl border-4 border-white mb-6 bg-black"></div>
+          <div id="reader" className="w-full max-w-sm rounded-2xl overflow-hidden shadow-xl border-4 border-white mb-6 bg-black min-h-[300px]"></div>
+          {cameraError && <p className="text-red-500 text-sm font-bold mb-4 px-4 text-center">{cameraError}</p>}
           <button
             onClick={() => setStep('input')}
             className="bg-white/90 backdrop-blur text-slate-600 font-bold py-3 px-8 rounded-full shadow-sm hover:bg-white"
@@ -343,6 +397,7 @@ const SendView = ({ onBack }) => {
           <p className="mt-4 text-xs text-slate-400">QRコードを枠内に合わせてください</p>
         </div>
       ) : (
+
         <>
           <div className="space-y-6">
             <div>
