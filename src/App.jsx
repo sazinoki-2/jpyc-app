@@ -38,7 +38,7 @@ function App() {
       <header className="fixed top-0 w-full z-50 glass px-5 py-4 flex justify-between items-center bg-white/80 backdrop-blur-md border-b border-slate-100">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView('home')}>
           <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden">
-            <img src="/jpycaikonn.png" alt="Logo" className="w-full h-full object-cover" />
+            <img src="./jpycaikonn.png" alt="Logo" className="w-full h-full object-cover" />
           </div>
           <h1 className="font-bold text-xl tracking-tight text-slate-800">JPYC Wallet</h1>
         </div>
